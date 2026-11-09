@@ -1,0 +1,22 @@
+{
+  "config_version": 1,
+  "data_dir": "/var/lib/p2pm-bootstrap/data",
+  "listen_addrs": ["/ip4/0.0.0.0/tcp/4001"],
+  "announce_addrs": ["/ip4/203.0.113.10/tcp/4001"],
+  "bootstrap_nodes": [],
+  "allow_private_addresses": false,
+  "dht_prefix": "/p2pm",
+  "max_record_age": "36h",
+  "relay": {
+    "reservation_ttl": "1h",
+    "circuit_duration": "1h",
+    "circuit_bytes_per_direction": 17179869184,
+    "max_reservations": 64,
+    "max_reservations_per_peer": 1,
+    "max_reservations_per_ip": 32,
+    "max_reservations_per_asn": 64,
+    "max_circuits_per_peer": 4
+  },
+  "max_connections": 256,
+  "max_streams": 1024
+}

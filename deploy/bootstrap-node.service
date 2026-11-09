@@ -1,0 +1,36 @@
+[Unit]
+Description=fuse bootstrap, DHT and Circuit Relay v2
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+User=p2pmessenger
+StateDirectory=p2pm-bootstrap
+StateDirectoryMode=0700
+WorkingDirectory=/var/lib/p2pm-bootstrap
+ExecStart=/opt/p2pmessenger/bootstrap-node --config /opt/p2pmessenger/config.json
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+CapabilityBoundingSet=
+MemoryMax=512M
+TasksMax=128
+LimitNOFILE=1024
+Environment=GOLOG_LOG_LEVEL=error
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+{
+  "config_version": 1,
+  "bootstrap_nodes": [],
+  "relay_nodes": [],
+  "direct_listen_addrs": [],
+  "allow_private_addresses": false,
+  "send_timeout": "30s",
+  "discovery_timeout": "6s",
+  "direct_dial_timeout": "2s",
+  "relay_dial_timeout": "10s",
+  "write_timeout": "5s",
+  "ack_timeout": "5s",
+  "publish_interval": "5m",
+  "log_level": "info"
+}
