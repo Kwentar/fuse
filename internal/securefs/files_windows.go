@@ -126,3 +126,35 @@ func Acquire(dir string) (*Lock, error) {
 	return &Lock{h}, nil
 }
 func (l *Lock) Close() error { return windows.CloseHandle(l.handle) }
+
+func OpenPrivateFile(path string, flags int) (*os.File, error) {
+	if e := Check(filepath.Dir(path)); e != nil {
+		return nil, e
+	}
+	if _, e := os.Lstat(path); e == nil {
+		if e = Check(path); e != nil {
+			return nil, e
+		}
+	} else if !os.IsNotExist(e) {
+		return nil, e
+	}
+	f, e := os.OpenFile(path, flags, 0600)
+	if e != nil {
+		return nil, e
+	}
+	if e = Protect(path); e == nil {
+		e = Check(path)
+	}
+	if e == nil {
+		var st os.FileInfo
+		st, e = f.Stat()
+		if e == nil && !st.Mode().IsRegular() {
+			e = errors.New("unsafe private file")
+		}
+	}
+	if e != nil {
+		f.Close()
+		return nil, e
+	}
+	return f, nil
+}

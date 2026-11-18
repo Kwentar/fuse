@@ -1,10 +1,10 @@
 # fuse
 
-fuse — P2P-мессенджер для текста и передачи оригинальных файлов. Windows 0.4.0 / Android 0.4.2 preview.
+fuse — P2P-мессенджер для текста и передачи оригинальных файлов. Windows GUI 0.4.0 / Android 0.4.2 preview / macOS 0.4.1; общее ядро 0.4.1.
 
-В публичных исходниках нет преднастроенных bootstrap/relay-серверов. Перед использованием настройте собственные узлы по [инструкции](docs/relay-servers.md): Windows — в `config.json` профиля после `init`; Android — в `internal/config/default-network.json` перед сборкой.
+В публичных исходниках нет преднастроенных bootstrap/relay-серверов. Перед использованием настройте собственные узлы по [инструкции](docs/relay-servers.md): Windows и macOS — в `config.json` профиля после `init`; Android — в `internal/config/default-network.json` перед сборкой.
 
-Для совместимости сохранены каталог профиля и загрузок `P2PMessenger`, Android package `org.p2pmessenger.app`, имена сетевых протоколов и консольного ядра `messenger`. Обновление названия не требует создавать новый ID.
+Для совместимости сохранены каталог профиля и загрузок `P2PMessenger`, Android package `org.p2pmessenger.app`, macOS bundle ID `app.p2pmessenger.macos`, имена сетевых протоколов и консольного ядра `messenger`. Обновление названия не требует создавать новый ID.
 
 Windows: `dist/fuse-0.4.0-windows.zip`. Android: `dist/android/fuse-0.4.2-preview-arm64.apk`.
 
@@ -18,14 +18,16 @@ Windows: `dist/fuse-0.4.0-windows.zip`. Android: `dist/android/fuse-0.4.2-previe
 - [Бэклог](BACKLOG.md): основной список хранится в `docs/backlog.md`.
 - [Результаты изменений](CHANGELOG.md).
 - [Журнал запусков и проверок](RUNLOG.md).
+- [Самодостаточный контракт совместимости 0.4.1](specs/fuse_compatibility_v0.4.1.md).
+- [Сборка и проверка macOS](docs/macos-build.md).
 
 ## Платформы и зависимости
 
 | Платформа | Что есть в этой папке | Состояние проверки |
 | --- | --- | --- |
-| Windows x64 | Go-ядро и C# WinForms GUI, версия ядра 0.4.0 | Go-тесты, go vet и Windows-сборка прошли; запуск GUI на этом этапе не проверялся |
+| Windows x64 | Общее Go-ядро 0.4.1 и C# WinForms GUI 0.4.0 | Go-тесты, go vet и Windows-сборка прошли; запуск GUI на этом этапе не проверялся |
 | Android ARM64, Android 8+ | Java-интерфейс и общее Go-ядро, manifest 0.4.2-preview | Компиляция Java прошла; эмулятор проверялся ранее, физическое устройство требует отдельной приёмки |
-| macOS | ТЗ клиента и обновления до совместимости с 0.4 | Исходники оболочки здесь не обнаружены; её запуск не установлен |
+| macOS 14+, arm64 | SwiftUI/AppKit в `macos/`, Go-helper внутри `Fuse.app` | Перенос и границы актуальной проверки — [RUNLOG](RUNLOG.md#run-macos-import-20261118) |
 | Linux x86_64 | bootstrap/DHT/relay без пользовательского GUI | Есть историческая приёмка; текущий сервер не проверялся |
 
 Go 1.27.3 и зависимости закреплены в `go.mod`/`go.sum`. Для текущих PowerShell-скриптов используйте PowerShell 7 (`pwsh`). Windows GUI компилируется `csc.exe` из .NET Framework 4.x по пути, указанному в `scripts/build-gui.ps1`. Для Android нужны JDK 17, SDK platform 35 и build-tools 35.0.0; для эмуляторного варианта дополнительно NDK 27.2.12479018. Подробности — в [Android-инструкции](docs/android.md). Python нужен только для соответствующих интеграционных/административных скриптов, не для обычного запуска GUI.
@@ -63,7 +65,17 @@ pwsh -File scripts/build-gui.ps1
 
 ## Запуск на macOS
 
-Команда запуска GUI пока не установлена: исходники macOS-оболочки в этой папке не найдены. Нужен существующий клиент по [ТЗ](specs/fuse_macOS_TZ_v0.1.md) и [заданию обновления](specs/fuse_macOS_upgrade_v0.4.md); см. TASK-MAC-001 в бэклоге. Команда `scripts/build.sh` собирает Windows-ядро и Linux-узел и не является сборкой macOS GUI. Работа macOS в этом этапе не проверена.
+Нужны Command Line Tools со Swift и SDK macOS, Go 1.27.3. Из корня клона:
+
+```sh
+scripts/setup-go-macos.sh  # либо установите Go 1.27.3 самостоятельно
+scripts/build-macos.sh
+open "dist/macos-0.4.1-arm64/Fuse.app"
+```
+
+Для нового профиля можно нажать «Создать ID» в приложении или выполнить `"dist/macos-0.4.1-arm64/Fuse.app/Contents/Helpers/messenger" init`. Затем заполните `bootstrap_nodes` и `relay_nodes` в `~/Library/Application Support/P2PMessenger/config.json` по [инструкции](docs/relay-servers.md) и перезапустите подключение. Пустая публичная конфигурация сама не выводит новый профиль в сеть.
+
+При обновлении завершите прежний P2P Messenger/Fuse через ⌘Q, затем откройте новую `.app`. Прежние ID, профиль и папка загрузок сохраняются; новое имя не требует переноса данных. Сборка использует локальную ad-hoc подпись, без Developer ID/notarization. Подробные команды, параметры архитектуры, резервное копирование и проверки — [macOS build](docs/macos-build.md). Сборки остаются локальными и не публикуются в Releases.
 
 ## Сборка и запуск Android
 
@@ -77,7 +89,7 @@ pwsh -File scripts/build-android.ps1
 
 ## Локальные настройки и данные
 
-Windows: профиль по умолчанию в `%LOCALAPPDATA%\P2PMessenger`, входящие — в выбранной папке, по умолчанию `Downloads/P2PMessenger`. Android: закрытый каталог приложения для профиля и исходящих копий, публикация входящих в Downloads либо выбранную папку. Расположение профиля существующей macOS-оболочки нужно установить отдельно. Linux-узел использует каталоги из своей конфигурации и unit.
+Windows: профиль по умолчанию в `%LOCALAPPDATA%\P2PMessenger`, входящие — в выбранной папке, по умолчанию `Downloads/P2PMessenger`. Android: закрытый каталог приложения для профиля и исходящих копий, публикация входящих в Downloads либо выбранную папку. macOS: `~/Library/Application Support/P2PMessenger`, входящие по умолчанию `~/Downloads/P2PMessenger`. Linux-узел использует каталоги из своей конфигурации и unit.
 
 `.local/` содержит локальные настройки и временные данные, `.tools/` — инструменты и кэши, `dist/` — результаты сборки. Ключи, `.env*`, профили, технические логи и прочие исключения перечислены в `.gitignore`. Пользовательские данные не переносятся в репозиторий; подробности безопасного хранения — ниже.
 

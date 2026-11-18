@@ -206,7 +206,7 @@ func (n *Node) receiveFileOperation(s network.Stream, q fileRequest) {
 			return
 		}
 		if r.Size == 0 {
-			f, e := os.OpenFile(r.Path, os.O_CREATE|os.O_WRONLY, 0600)
+			f, e := securefs.OpenPrivateFile(r.Path, os.O_CREATE|os.O_WRONLY)
 			if e != nil {
 				respond("STORAGE_ERROR", 0)
 				return
@@ -236,7 +236,7 @@ func (n *Node) receiveFileOperation(s network.Stream, q fileRequest) {
 		respond("INVALID_CHUNK", r.Progress)
 		return
 	}
-	f, e := os.OpenFile(r.Path, os.O_CREATE|os.O_RDWR, 0600)
+	f, e := securefs.OpenPrivateFile(r.Path, os.O_CREATE|os.O_RDWR)
 	if e != nil {
 		respond("STORAGE_ERROR", r.Progress)
 		return
@@ -329,7 +329,7 @@ func (n *Node) QueueFile(p peer.ID, path, id string) (FileRecord, error) {
 		return existing, nil
 	}
 	r = FileRecord{Version: 2, ID: id, Name: filepath.Base(path), Size: st.Size(), Peer: p.String(), Direction: "out", Status: "queued", Path: path, Time: time.Now().UTC().Format(time.RFC3339Nano)}
-	if len(r.Name) > 255 {
+	if len(r.Name) == 0 || len(r.Name) > 255 || !utf8.ValidString(r.Name) || strings.ContainsAny(r.Name, "/\\\x00\r\n") {
 		return r, errors.New("INVALID_FILE_NAME")
 	}
 	if e = n.saveFileRecord(r); e != nil {

@@ -1,5 +1,24 @@
 # Журнал проверок Fuse
 
+<a id="run-macos-import-20261118"></a>
+## RUN-2026-11-18-002 — Перенос и проверка macOS-клиента
+
+Источник: [REQ-2026-11-18-MACOS-IMPORT](REQUESTS.md#req-macos-import-20261118), TASK-MAC-001/002.
+Устройство / ОС: Mac, macOS 15.7.3 arm64, Command Line Tools Swift 6.2.3, SDK MacOSX15.4, Go 1.27.3.
+База: `9f8828bbf8ad7a63225b2f01fe4e351ee2777649`, рабочая ветка `add-macos-client`. Проверяется эта база с локальным переносом macOS и перечисленными изменениями общего ядра, а не неизменённый базовый коммит.
+
+- Клон получен из указанного пользователем Kwentar/fuse. После отдельного уведомления пользователя выполнены fetch и fast-forward с `b99cb88` до `9f8828b`; прочитаны новые требования чата, файлов и relay. Они сохранены в общем бэклоге.
+- `go test ./... -count=1 -timeout=5m` — PASS на Mac, включая новый backup/сохранение ID, IPC/securefs, файловые границы и восстановление; прежние тесты fallback 2.0, очереди и экспорта входят в прогон. `go vet ./...` — PASS.
+- `SDK=... scripts/test-macos-ui.sh` — PASS: конкурентные pipes, Unicode и буквальные аргументы, JSONL при ненулевом exit, Int64 выше 2^53, потоковое сохранение, 1010 путей и долговечные UUID/пауза. Компилятор сообщает о лишних await в перенесённых тестах; ошибок нет.
+- `GO=... SDK=... scripts/build-macos.sh` — PASS: собраны GUI/helper arm64, ad-hoc подпись прошла `codesign --verify --deep --strict`. Встроенные defaults пусты, bundle ID и имя helper сохранены, инструкция внутри .app совпадает с исходником.
+- `go build -o .build/smoke-bootstrap ./cmd/bootstrap`; `python3 scripts/smoke-macos.py --bootstrap-core .build/smoke-bootstrap` — PASS дважды. Настоящий GUI запускает собственный helper, тот подключается к временной loopback-инфраструктуре, сохраняет Peer ID/ключ и создаёт корректный backup. Все тестовые процессы завершены, временные профили/загрузки удалены; пользовательский профиль не использовался.
+- `CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go test -c -o .build/windows-tests/ ./...` и аналогично `GOOS=linux` — PASS. Это компиляция тестов, не их исполнение на Windows/Linux.
+- `CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build -trimpath -ldflags="-s -w -checklinkname=0" -o .build/android-messenger.so ./cmd/client` — PASS: собрано Android-ядро; APK и исполнение на устройстве не проверялись.
+- `bash -n` трёх macOS shell-скриптов и `PYTHONPYCACHEPREFIX=.build/pycache python3 -m py_compile` новых Python-сценариев — PASS. Первая проверка Python без переопределения cache упёрлась в недоступный системный каталог кеша; повтор использует игнорируемый каталог проекта.
+- Состав публикуемых файлов проверен на известные личные пути, адреса/ID прежних серверов, блоки приватных ключей и токены; совпадений не найдено. `git check-ignore` подтвердил исключение macOS build-каталогов и UI-состояния профиля. Публичные defaults проверены на пустые массивы, go.mod/go.sum не изменены. Полные логи остаются локально.
+
+Ограничения: физические Windows/Android, Intel/macOS 14, публичный relay нового клона, 10 ГиБ и полный прогон UI-жестов на этом этапе не проверялись. Готовые сборки/архивы/Releases не публикуются. PowerShell-упаковка получила правило отбора macOS-исходников; исполнение PowerShell-скрипта на этом Mac не заявляется. Публикация ветки и итоговая сверка SHA записываются после успешного push.
+
 <a id="run-backlog-20261118"></a>
 ## RUN-2026-11-18-001 — Синхронизация Git и общий бэклог клиентов
 

@@ -27,7 +27,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-const Version = "0.4.0"
+const Version = "0.4.1"
 
 func Main(args []string) int {
 	code, err := run(args)
@@ -58,6 +58,7 @@ func run(args []string) (int, error) {
 	machine := false
 	limit := 50
 	stdin := false
+	gui := false
 	pos := []string{}
 	for i := 0; i < len(args); i++ {
 		s := args[i]
@@ -85,6 +86,8 @@ func run(args []string) (int, error) {
 			}
 		case "--stdin":
 			stdin = true
+		case "--gui":
+			gui = true
 		default:
 			pos = append(pos, s)
 		}
@@ -114,7 +117,7 @@ func run(args []string) (int, error) {
 	if e != nil {
 		return 6, e
 	}
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, cancel := signal.NotifyContext(context.Background(), shutdownSignals()...)
 	defer cancel()
 	command := pos[0]
 	if command == "init" {
@@ -139,6 +142,12 @@ func run(args []string) (int, error) {
 		c, e := config.LoadClient(filepath.Join(dir, "config.json"))
 		if e != nil {
 			return 6, fmt.Errorf("NODE_NOT_READY: run init and configure the data directory: %w", e)
+		}
+		if gui {
+			if e = prepareGUIProfile(dir); e != nil {
+				return 6, e
+			}
+			c.SmartRouting = true
 		}
 		n, e := node.Open(ctx, dir, c, func(p peer.ID, m messaging.Message) {
 			if !machine {

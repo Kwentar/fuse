@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fuse/internal/securefs"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -11,6 +12,15 @@ import (
 
 func TestStreamingResponsesAndIdentity(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "data")
+	// macOS sun_path is only 104 bytes; testing.T's descriptive paths can exceed it.
+	if len(filepath.Join(dir, "control.sock")) > 103 {
+		var e error
+		dir, e = os.MkdirTemp("", "p2pm-ipc-")
+		if e != nil {
+			t.Fatal(e)
+		}
+		t.Cleanup(func() { os.RemoveAll(dir) })
+	}
 	if e := securefs.EnsureDir(dir); e != nil {
 		t.Fatal(e)
 	}

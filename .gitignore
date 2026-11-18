@@ -70,3 +70,12 @@ Desktop.ini
 /tmp/
 /logs/
 /data/
+
+# macOS build products and private UI state
+.build/
+*.app/
+*.dSYM/
+macos-staging.json
+macos-version.json
+ui-pending.json
+profile.json

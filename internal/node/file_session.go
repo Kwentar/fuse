@@ -31,9 +31,6 @@ func (s *fileSession) close() {
 	}
 }
 func (s *fileSession) exchange(ctx context.Context, q fileRequest, data []byte) (reply fileReply, err error) {
-	if s.s != nil && s.route == "relay" && time.Since(s.opened) > 30*time.Second {
-		s.close()
-	}
 	if s.s == nil {
 		if !s.legacy {
 			s.s, s.route, err = s.n.openProtocol(ctx, s.p, fileSessionProtocol)
@@ -105,6 +102,10 @@ func (n *Node) transferFile(ctx context.Context, r *FileRecord, p peer.ID, f *os
 	for {
 		if e := ctx.Err(); e != nil {
 			return e
+		}
+		if session.s != nil && session.route == "relay" && time.Since(session.opened) > 30*time.Second {
+			session.close()
+			needStatus = true // A new connection always reconciles the receiver's durable offset.
 		}
 		q := fileRequest{Version: 2, ID: r.ID, Name: r.Name, Size: r.Size, SHA: r.SHA, Offset: r.Progress}
 		var data []byte

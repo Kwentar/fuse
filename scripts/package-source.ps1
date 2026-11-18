@@ -13,6 +13,7 @@ try {
     $rules=@{
         'cmd'=@('.go'); 'internal'=@('.go'); 'tests'=@('.go')
         'gui'=@('.cs'); 'android'=@('.java','.xml')
+        'macos'=@('.swift','.py','.plist','.html')
         'scripts'=@('.py','.ps1','.sh')
     }
     foreach($dir in $rules.Keys) {
